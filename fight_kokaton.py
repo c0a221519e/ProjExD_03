@@ -166,6 +166,18 @@ class Explosion:
             else:
                 self.index = len(self.images) - 1
             self.life -= 1
+class Score:
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
+        self.color = (0, 0, 255)
+        self.value = 0
+        self.img = self.font.render("Score: " + str(self.value), 0, self.color)
+        self.img_rect = self.img.get_rect()
+        self.img_rect.topleft = (100, HEIGHT - 50)
+
+    def update(self, screen):
+        self.img = self.font.render("Score: " + str(self.value), 0, self.color)
+        screen.blit(self.img, self.img_rect)
 
 
 def main():
@@ -176,7 +188,7 @@ def main():
     bombs = [Bomb() for _ in range(NUM_OF_BOMBS)]
     beam = None # beamの初期化
     explosions = []  # 爆発用のリストを初期化
-
+    score = Score()  # Scoreクラスのインスタンスを生成
     clock = pg.time.Clock()
     tmr = 0
 
@@ -198,7 +210,7 @@ def main():
                 time.sleep(1)
                 return
                 
-        for i,bomb in enumerate(bombs):
+        for i, bomb in enumerate(bombs):
             if beam is not None and bomb is not None:
                 if beam.rct.colliderect(bomb.rct):
                     explosions.append(Explosion(bomb.rct.center))
@@ -206,7 +218,12 @@ def main():
                     bomb = None
                     bombs[i] = None
                     bird.change_img(6, screen)
+                    score.value += 1  # 爆弾を打ち落としたらスコアを1点増やす
                     pg.display.update()
+                    
+        score.update(screen)
+
+        bombs = [bomb for bomb in bombs if bomb is not None]
 
         # 爆発エフェクトを更新
         explosions = [explosion for explosion in explosions if explosion.life > 0]
