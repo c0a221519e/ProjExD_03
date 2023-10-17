@@ -191,7 +191,7 @@ def main():
     score = Score()  # Scoreクラスのインスタンスを生成
     clock = pg.time.Clock()
     tmr = 0
-
+    beams = [] #Beamクラスのインスタンスを保持するための空のリストを作成
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -199,6 +199,7 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # キー押下かつ，スペースキーの場合
                 beam = Beam(bird)
+                beams.append(beam)  # ビームをリストに追加
         
         screen.blit(bg_img, [0, 0])
         
@@ -211,15 +212,16 @@ def main():
                 return
                 
         for i, bomb in enumerate(bombs):
-            if beam is not None and bomb is not None:
-                if beam.rct.colliderect(bomb.rct):
-                    explosions.append(Explosion(bomb.rct.center))
-                    beam = None
-                    bomb = None
-                    bombs[i] = None
-                    bird.change_img(6, screen)
-                    score.value += 1  # 爆弾を打ち落としたらスコアを1点増やす
-                    pg.display.update()
+            for beam in beams:
+                if beam is not None and bomb is not None:
+                    if beam.rct.colliderect(bomb.rct):
+                        explosions.append(Explosion(bomb.rct.center))
+                        beams.remove(beam)  # ビームをリストから削除
+                        bomb = None
+                        bombs[i] = None
+                        bird.change_img(6, screen)
+                        score.value += 1  # 爆弾を打ち落としたらスコアを1点増やす
+                        pg.display.update()
                     
         score.update(screen)
 
@@ -240,8 +242,12 @@ def main():
             bomb.update(screen)
 
         # ビームインスタンスが生成されている場合
-        if beam is not None:
-            beam.update(screen)
+        for beam in beams:
+            if beam is not None:
+                beam.update(screen)
+                # 画面外に出たビームをリストから削除
+                if not beam.rct.colliderect(screen.get_rect()):
+                    beams.remove(beam)
 
         pg.display.update()
         tmr += 1
