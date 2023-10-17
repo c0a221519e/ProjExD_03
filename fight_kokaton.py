@@ -1,10 +1,15 @@
 import random
 import sys
 import time
+
 import pygame as pg
+
+
 WIDTH = 1600  # ゲームウィンドウの幅
 HEIGHT = 900  # ゲームウィンドウの高さ
-NUM_OF_BOMBS = 5
+NUM_OF_BOMBS = 5 # 爆弾の数
+
+
 def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
     """
     オブジェクトが画面内or画面外を判定し，真理値タプルを返す関数
@@ -17,6 +22,34 @@ def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
     if obj_rct.top < 0 or HEIGHT < obj_rct.bottom:
         tate = False
     return yoko, tate
+
+class Beam:
+    """
+    ビームに関するクラス
+    """
+    def __init__(self, bird):
+        """
+        ビーム画像Surfaceを生成する
+        引数 bird：こうかとんインスタンス
+        """
+        # self.img = pg.image.load("fig/beam.png")
+        self.img = pg.transform.rotozoom(  # 2倍に拡大
+                pg.image.load(f"ex03/fig/beam.png"), 
+                0, 
+                2.0)
+        self.rct = self.img.get_rect()
+        self.rct.centerx  = bird.rct.right # こうかとんの中心 x座標
+        self.rct.centery = bird.rct.centery # こうかとんの中心 y座標
+        self.vx, self.vy = +5, 0
+
+    def update(self, screen: pg.Surface):
+        """
+        爆弾を速度ベクトルself.vx, self.vyに基づき移動させる
+        引数 screen：画面Surface
+        """
+        self.rct.move_ip(self.vx, self.vy)
+        screen.blit(self.img, self.rct)
+
 class Bird:
     """
     ゲームキャラクター（こうかとん）に関するクラス
@@ -27,6 +60,7 @@ class Bird:
         pg.K_LEFT: (-5, 0),
         pg.K_RIGHT: (+5, 0),
     }
+
     def __init__(self, num: int, xy: tuple[int, int]):
         """
         こうかとん画像Surfaceを生成する
@@ -46,8 +80,22 @@ class Bird:
             (+5, +5): pg.transform.rotozoom(img, -45, 1.0),  # 右下
         }
         self.img = self.imgs[(+5, 0)]
+        img0 = pg.transform.rotozoom(pg.image.load(f"ex03/fig/{num}.png"), 0, 2.0)
+        img = pg.transform.flip(img0, True, False)  # デフォルトのこうかとん（右向き）
+        self.imgs = {  # 0度から反時計回りに定義
+            (+5, 0): img,  # 右
+            (+5, -5): pg.transform.rotozoom(img, 45, 1.0),  # 右上
+            (0, -5): pg.transform.rotozoom(img, 90, 1.0),  # 上
+            (-5, -5): pg.transform.rotozoom(img0, -45, 1.0),  # 左上
+            (-5, 0): img0,  # 左
+            (-5, +5): pg.transform.rotozoom(img0, 45, 1.0),  # 左下
+            (0, +5): pg.transform.rotozoom(img, -90, 1.0),  # 下
+            (+5, +5): pg.transform.rotozoom(img, -45, 1.0),  # 右下
+        }
+        self.img = self.imgs[(+5, 0)]
         self.rct = self.img.get_rect()
         self.rct.center = xy
+
     def change_img(self, num: int, screen: pg.Surface):
         """
         こうかとん画像を切り替え，画面に転送する
@@ -56,6 +104,7 @@ class Bird:
         """
         self.img = pg.transform.rotozoom(pg.image.load(f"ex03/fig/{num}.png"), 0, 2.0)
         screen.blit(self.img, self.rct)
+
     def update(self, key_lst: list[bool], screen: pg.Surface):
         """
         押下キーに応じてこうかとんを移動させる
@@ -72,7 +121,11 @@ class Bird:
             self.rct.move_ip(-sum_mv[0], -sum_mv[1])
         if not (sum_mv[0] == 0 and sum_mv[1] == 0):
             self.img = self.imgs[tuple(sum_mv)]
+        if not (sum_mv[0] == 0 and sum_mv[1] == 0):
+            self.img = self.imgs[tuple(sum_mv)]
         screen.blit(self.img, self.rct)
+
+
 class Bomb:
     """
     爆弾に関するクラス
@@ -141,13 +194,15 @@ def main():
     beam = None
     clock = pg.time.Clock()
     tmr = 0
+
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                beam = Beam(bird)  # ビームクラスのインスタンスを生成する
-                
+                # キー押下かつ，スペースキーの場合
+                beam = Beam(bird)
+        
         screen.blit(bg_img, [0, 0])
         for bomb in bombs:
             if bomb is not None:
@@ -173,14 +228,18 @@ def main():
             bomb.update(screen)
         if bomb is not None:
             bomb.update(screen)
-        if beam is not None: 
+
+        # ビームインスタンスが生成されている場合
+        if beam is not None:
             beam.update(screen)
+
         pg.display.update()
         tmr += 1
         clock.tick(50)
+
+
 if __name__ == "__main__":
     pg.init()
     main()
     pg.quit()
-    sys.exit()
     sys.exit()
