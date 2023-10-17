@@ -1,14 +1,11 @@
 import random
 import sys
 import time
-
 import pygame as pg
-
 
 WIDTH = 1600  # ゲームウィンドウの幅
 HEIGHT = 900  # ゲームウィンドウの高さ
 NUM_OF_BOMBS = 5 # 爆弾の数
-
 
 def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
     """
@@ -49,6 +46,7 @@ class Beam:
         """
         self.rct.move_ip(self.vx, self.vy)
         screen.blit(self.img, self.rct)
+
 
 class Bird:
     """
@@ -99,6 +97,7 @@ class Bird:
         引数2 screen：画面Surface
         """
         sum_mv = [0, 0]
+        
         for k, mv in __class__.delta.items():
             if key_lst[k]:
                 sum_mv[0] += mv[0]
@@ -146,12 +145,13 @@ class Bomb:
             self.vy *= -1
         self.rct.move_ip(self.vx, self.vy)
         screen.blit(self.img, self.rct)
+
+
 class Explosion:
     def __init__(self, center):
         self.images = [pg.image.load("ex03/fig/explosion.gif")]
         for img in self.images.copy():
             self.images.append(pg.transform.flip(img, True, False))
-
         self.index = 0
         self.image = self.images[self.index]
         self.rect = self.image.get_rect()
@@ -166,6 +166,8 @@ class Explosion:
             else:
                 self.index = len(self.images) - 1
             self.life -= 1
+
+
 class Score:
     def __init__(self):
         self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
@@ -224,17 +226,15 @@ def main():
                         pg.display.update()
                     
         score.update(screen)
-
         bombs = [bomb for bomb in bombs if bomb is not None]
-
         # 爆発エフェクトを更新
         explosions = [explosion for explosion in explosions if explosion.life > 0]
+
         for explosion in explosions:
             explosion.update()
             screen.blit(explosion.image, explosion.rect)
 
         bombs = [bomb for bomb in bombs if bomb is not None]
-
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
 
@@ -252,6 +252,7 @@ def main():
         pg.display.update()
         tmr += 1
         clock.tick(50)
+
 
 if __name__ == "__main__":
     pg.init()
